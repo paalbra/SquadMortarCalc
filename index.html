@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<head>
+<title>Squad Mortar Calc</title>
+<meta charset="utf-8">
+</head>
+
+<body>
+
+<form>
+  <label for="morta_pos">Mortar coordinate:</label><br>
+  <input type="text" id="mortar_pos" name="mortar_pos" placeholder="A1-KP1-1" value=""><br>
+  <label for="morta_pos">Target coordinate:</label><br>
+  <input type="text" id="target_pos" name="target_pos" placeholder="B2-KP2-2" value=""><br>
+  <label for="morta_pos">KP size (m):</label><br>
+  <input type="text" id="kp_size" name="kp_size" value="100"><br>
+  <button type="button" id="calculate">Calculate</button>
+  <p id="output"></p>
+</form>
+
+<script type="text/javascript">
+function calculate() {
+    var mortar_coordinate = parseMapCoordinate(document.getElementById("mortar_pos").value);
+    var target_coordinate = parseMapCoordinate(document.getElementById("target_pos").value);
+    var sub_kp_size = parseInt(document.getElementById("kp_size").value)/3;
+    var output_element = document.getElementById("output");
+
+    var vector = getVector(mortar_coordinate, target_coordinate);
+    var angle = getAngle(vector[0], vector[1]);
+    var distance = getDistance(vector[0], vector[1]) * sub_kp_size;
+
+    var mil = rangeToMil(distance);
+    if (mil != null) {
+        var output = "Angle: <b>" + angle.toFixed(0) + "</b><br>Milliradian: <b>" + mil.toFixed(0) + "</b>mil (" +distance.toFixed(0) + "m)";
+    } else {
+        var output = "Angle: <b>" + angle.toFixed(0) + "</b><br>Milliradian: <b>NOT IN RANGE</b> (" +distance.toFixed(0) + "m)";
+    }
+    output_element.innerHTML = output;
+}
+
+function getAngle(x, y) {
+    var angle = Math.atan2(x, y) * 180/Math.PI;
+    if (angle < 0) {
+        angle += 360;
+    }
+    return (angle+180)%360;
+}
+
+function getDistance(x, y) {
+    return Math.hypot(x, y);
+}
+
+function getVector(from_coordinate, to_coordinate) {
+    var vector = [from_coordinate[0] - to_coordinate[0], from_coordinate[1] - to_coordinate[1]];
+    return vector;
+}
+
+function kp_to_x(kp) {
+    return (kp-1)%3;
+}
+
+function kp_to_y(kp) {
+    return Math.abs(Math.ceil(kp/3)-3);
+}
+
+function parseMapCoordinate(coordinate) {
+    var re = /^([A-Za-z])(\d+)-(?:KP|kp)([1-9])-([1-9])$/;
+    var match = re.exec(coordinate);
+    if (match == null) {
+        console.error("The pattern did not match the coordinate:", coordinate);
+        // TODO: Handle?
+        return null;
+    }
+    // Convert char to int and zero index the coordinate
+    var major_x = match[1].toUpperCase().charCodeAt() - 65;
+    var major_y = parseInt(match[2]) - 1;
+    var kp = parseInt(match[3]);
+    var sub_kp = parseInt(match[4]);
+
+    var x = major_x*9 + kp_to_x(kp)*3 + kp_to_x(sub_kp);
+    var y = (major_y*9 + kp_to_y(kp)*3 + kp_to_y(sub_kp)) * -1;
+
+    return [x, y];
+}
+
+function rangeToMil(range) {
+    if (range < 50 || range > 1250) {
+        return null;
+    }
+    var mapTable = [[50, 1579],
+        [100, 1558],
+        [150, 1538],
+        [200, 1517],
+        [250, 1496],
+        [300, 1475],
+        [350, 1453],
+        [400, 1431],
+        [450, 1409],
+        [500, 1387],
+        [550, 1364],
+        [600, 1341],
+        [650, 1317],
+        [700, 1292],
+        [750, 1267],
+        [800, 1240],
+        [850, 1212],
+        [900, 1183],
+        [950, 1152],
+        [1000, 1118],
+        [1050, 1081],
+        [1100, 1039],
+        [1150, 988],
+        [1200, 918],
+        [1250, 800]];
+
+    for (var i = 0; i < mapTable.length-1; i++) {
+        if (range >= mapTable[i][0] && range <= mapTable[i+1][0]) {
+            var map1 = mapTable[i];
+            var map2 = mapTable[i+1];
+            var rel = (range - map1[0])/(map2[0] - map1[0]);
+            var diff = map1[1] - map2[1];
+            var mil = map1[1] - (diff*rel);
+            return mil;
+        }
+    }
+}
+
+document.getElementById("calculate").addEventListener("click", calculate);
+
+</script>
+
+</body>
