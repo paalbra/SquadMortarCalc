@@ -63,7 +63,7 @@ function kp_to_y(kp) {
 }
 
 function parseMapCoordinate(coordinate) {
-    var re = /^([A-Za-z])(\d+)-(?:KP|kp)([1-9])-([1-9])$/;
+    var re = /^([A-Za-z])(\d+)-(?:KP|kp)?([1-9])-([1-9])$/;
     var match = re.exec(coordinate);
     if (match == null) {
         console.error("The pattern did not match the coordinate:", coordinate);
