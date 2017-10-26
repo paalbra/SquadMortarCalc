@@ -18,8 +18,14 @@
 
 <script type="text/javascript">
 function calculate() {
-    var mortar_coordinate = parseMapCoordinate(document.getElementById("mortar_pos").value);
-    var target_coordinate = parseMapCoordinate(document.getElementById("target_pos").value);
+    var mortar_coordinate_string = document.getElementById("mortar_pos").value;
+    var mortar_coordinate = parseMapCoordinate(mortar_coordinate_string);
+    var target_coordinate_string = document.getElementById("target_pos").value;
+    var target_coordinate = parseMapCoordinate(target_coordinate_string);
+    if (mortar_coordinate == null || target_coordinate == null) {
+        console.log("One or both coordinates is not understood. Mortar:'" +mortar_coordinate_string +"', target:'" +target_coordinate_string +"'");
+        return;
+    }
     var sub_kp_size = parseInt(document.getElementById("kp_size").value)/3;
     var output_element = document.getElementById("output");
 
@@ -65,8 +71,6 @@ function parseMapCoordinate(coordinate) {
     var re = /^([A-Za-z])(\d+)-(?:KP|kp)?([1-9])-([1-9])$/;
     var match = re.exec(coordinate);
     if (match == null) {
-        console.error("The pattern did not match the coordinate:", coordinate);
-        // TODO: Handle?
         return null;
     }
     // Convert char to int and zero index the coordinate
